@@ -18,11 +18,11 @@ authors = ["Santiago Carmuega <santiago@carmuega.me>"]
 
 pallas-multiplexer = "0.18.2"
 pallas-miniprotocols = "0.18.2"
-pallas-primitives = "0.29.0"
-pallas-traverse = "0.29.0"
-pallas-addresses = "0.29.0"
-pallas-codec = "0.29.0"
-pallas-crypto = "0.29.0"
+pallas-primitives = "0.30.1"
+pallas-traverse = "0.30.1"
+pallas-addresses = "0.30.1"
+pallas-codec = "0.30.1"
+pallas-crypto = "0.30.1"
 
 hex = "0.4.3"
 net2 = "0.2.37"
