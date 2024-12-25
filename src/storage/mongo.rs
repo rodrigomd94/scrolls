@@ -256,14 +256,14 @@ impl gasket::runtime::Worker for Worker {
                         doc.get_document("scores")
                             .ok()
                             .and_then(|scores| scores.get_str(&value).ok())
-                            .and_then(|score_str| score_str.parse::<i64>().ok())
+                            .and_then(|score_str| score_str.parse::<i128>().ok())
                             .unwrap_or(0)
                     }
                     None => 0,
                 };
 
                 // Calculate new value and store as string
-                let new_score = current_score + delta;
+                let new_score = current_score + (delta as i128);
                 collection
                     .update_one(
                         doc! { "_id": &key },
@@ -292,14 +292,14 @@ impl gasket::runtime::Worker for Worker {
                         doc.get_document("scores")
                             .ok()
                             .and_then(|scores| scores.get_str(&value).ok())
-                            .and_then(|score_str| score_str.parse::<i64>().ok())
+                            .and_then(|score_str| score_str.parse::<i128>().ok())
                             .unwrap_or(0)
                     }
                     None => 0,
                 };
 
                 // Calculate new value and store as string
-                let new_score = current_score + delta;
+                let new_score = current_score + (delta as i128);
                 collection
                     .update_one(
                         doc! { "_id": &key },
@@ -326,11 +326,33 @@ impl gasket::runtime::Worker for Worker {
                     .or_restart()?;
             }
             model::CRDTCommand::PNCounter(key, value) => {
+                // First get the current value if it exists
+                let current_doc = collection
+                    .find_one(
+                        doc! { "_id": &key },
+                        None
+                    )
+                    .await
+                    .map_err(|e| crate::Error::StorageError(e.to_string()))
+                    .or_restart()?;
+
+                let current_value = match current_doc {
+                    Some(doc) => {
+                        doc.get_str("counter")
+                            .ok()
+                            .and_then(|val_str| val_str.parse::<i128>().ok())
+                            .unwrap_or(0)
+                    }
+                    None => 0,
+                };
+
+                // Calculate new value and store as string
+                let new_value = current_value + (value as i128);
                 collection
                     .update_one(
                         doc! { "_id": &key },
                         doc! { 
-                            "$inc": { "counter": value }
+                            "$set": { "counter": new_value.to_string() }
                         },
                         UpdateOptions::builder().upsert(true).build(),
                     )
