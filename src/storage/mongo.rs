@@ -241,11 +241,34 @@ impl gasket::runtime::Worker for Worker {
                     .or_restart()?;
             }
             model::CRDTCommand::SortedSetAdd(key, value, delta) => {
+                // First get the current value if it exists
+                let current_doc = collection
+                    .find_one(
+                        doc! { "_id": &key },
+                        None
+                    )
+                    .await
+                    .map_err(|e| crate::Error::StorageError(e.to_string()))
+                    .or_restart()?;
+
+                let current_score = match current_doc {
+                    Some(doc) => {
+                        doc.get_document("scores")
+                            .ok()
+                            .and_then(|scores| scores.get_str(&value).ok())
+                            .and_then(|score_str| score_str.parse::<i64>().ok())
+                            .unwrap_or(0)
+                    }
+                    None => 0,
+                };
+
+                // Calculate new value and store as string
+                let new_score = current_score + delta;
                 collection
                     .update_one(
                         doc! { "_id": &key },
                         doc! { 
-                            "$inc": { format!("scores.{}", value): delta }
+                            "$set": { format!("scores.{}", value): new_score.to_string() }
                         },
                         UpdateOptions::builder().upsert(true).build(),
                     )
@@ -254,11 +277,34 @@ impl gasket::runtime::Worker for Worker {
                     .or_restart()?;
             }
             model::CRDTCommand::SortedSetRemove(key, value, delta) => {
+                // First get the current value if it exists
+                let current_doc = collection
+                    .find_one(
+                        doc! { "_id": &key },
+                        None
+                    )
+                    .await
+                    .map_err(|e| crate::Error::StorageError(e.to_string()))
+                    .or_restart()?;
+
+                let current_score = match current_doc {
+                    Some(doc) => {
+                        doc.get_document("scores")
+                            .ok()
+                            .and_then(|scores| scores.get_str(&value).ok())
+                            .and_then(|score_str| score_str.parse::<i64>().ok())
+                            .unwrap_or(0)
+                    }
+                    None => 0,
+                };
+
+                // Calculate new value and store as string
+                let new_score = current_score + delta;
                 collection
                     .update_one(
                         doc! { "_id": &key },
                         doc! { 
-                            "$inc": { format!("scores.{}", value): delta }
+                            "$set": { format!("scores.{}", value): new_score.to_string() }
                         },
                         UpdateOptions::builder().upsert(true).build(),
                     )

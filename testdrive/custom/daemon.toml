@@ -1,6 +1,6 @@
 [source]
 type = "N2C"
-path = "/home/<user>/dolos.socket"
+path = "/home/rodrigo/dolos.socket"
 
 [[reducers]]
 type = "AssetHoldersByAsset"
