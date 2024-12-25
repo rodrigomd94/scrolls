@@ -1,6 +1,9 @@
 pub mod redis;
 pub mod skip;
 
+#[cfg(feature = "async")]
+pub mod mongo;
+
 #[cfg(feature = "elastic")]
 pub mod elastic;
 
@@ -18,6 +21,9 @@ use crate::{
 pub enum Config {
     Skip(skip::Config),
     Redis(redis::Config),
+    
+    #[cfg(feature = "async")]
+    Mongo(mongo::Config),
 
     #[cfg(feature = "elastic")]
     Elastic(elastic::Config),
@@ -33,6 +39,7 @@ impl Config {
         match self {
             Config::Skip(c) => Bootstrapper::Skip(c.bootstrapper()),
             Config::Redis(c) => Bootstrapper::Redis(c.bootstrapper(chain, intersect)),
+            Config::Mongo(c) => Bootstrapper::Mongo(c.bootstrapper(chain, intersect)),
 
             #[cfg(feature = "elastic")]
             Config::Elastic(c) => Bootstrapper::Elastic(c.bootstrapper(chain, intersect, policy)),
@@ -43,6 +50,9 @@ impl Config {
 pub enum Bootstrapper {
     Redis(redis::Bootstrapper),
     Skip(skip::Bootstrapper),
+    
+    #[cfg(feature = "async")]
+    Mongo(mongo::Bootstrapper),
 
     #[cfg(feature = "elastic")]
     Elastic(elastic::Bootstrapper),
@@ -53,6 +63,7 @@ impl Bootstrapper {
         match self {
             Bootstrapper::Skip(x) => x.borrow_input_port(),
             Bootstrapper::Redis(x) => x.borrow_input_port(),
+            Bootstrapper::Mongo(x) => x.borrow_input_port(),
 
             #[cfg(feature = "elastic")]
             Bootstrapper::Elastic(x) => x.borrow_input_port(),
@@ -63,6 +74,7 @@ impl Bootstrapper {
         match self {
             Bootstrapper::Skip(x) => Cursor::Skip(x.build_cursor()),
             Bootstrapper::Redis(x) => Cursor::Redis(x.build_cursor()),
+            Bootstrapper::Mongo(x) => Cursor::Mongo(x.build_cursor()),
 
             #[cfg(feature = "elastic")]
             Bootstrapper::Elastic(x) => Cursor::Elastic(x.build_cursor()),
@@ -73,6 +85,7 @@ impl Bootstrapper {
         match self {
             Bootstrapper::Skip(x) => x.spawn_stages(pipeline),
             Bootstrapper::Redis(x) => x.spawn_stages(pipeline),
+            Bootstrapper::Mongo(x) => x.spawn_stages(pipeline),
 
             #[cfg(feature = "elastic")]
             Bootstrapper::Elastic(x) => x.spawn_stages(pipeline),
@@ -83,6 +96,9 @@ impl Bootstrapper {
 pub enum Cursor {
     Skip(skip::Cursor),
     Redis(redis::Cursor),
+    
+    #[cfg(feature = "async")]
+    Mongo(mongo::Cursor),
 
     #[cfg(feature = "elastic")]
     Elastic(elastic::Cursor),
@@ -93,6 +109,7 @@ impl Cursor {
         match self {
             Cursor::Skip(x) => x.last_point(),
             Cursor::Redis(x) => x.last_point(),
+            Cursor::Mongo(x) => x.last_point(),
 
             #[cfg(feature = "elastic")]
             Cursor::Elastic(x) => x.last_point(),

@@ -1,2 +1,5 @@
-dump.rdb
-enrich.db
+*.wt
+*.lock
+*.turtle
+*.bson
+WiredTiger
