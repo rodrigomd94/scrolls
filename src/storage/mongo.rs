@@ -156,6 +156,7 @@ impl gasket::runtime::Worker for Worker {
         self.runtime.block_on(async {
             match msg.payload {
             model::CRDTCommand::BlockStarting(_) => {
+                // TODO: Implement support for transactions in MongoDB if replica set is used (configured in daemon.toml)
                 // MongoDB transactions require replica sets, so we'll just proceed without transaction
                 // for simplicity. In production, you might want to use transactions if running with replica sets.
             }
